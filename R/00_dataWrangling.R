@@ -115,5 +115,4 @@ plot_ebola_col_v1 <- ggplot(data = ebola_arr,
 #ggsave("plot_ebola_col_v1.pdf", plot = plot_ebola_col_v1, width = 8, height = 6) # only run once
 plot_ebola_col_v1
 
-
-#this is a change for uploading to GitHub
+#this is a change for uploading to GitHub8 -- with comment 2.0
