@@ -5,8 +5,8 @@ library(here)
 library(labelled)
 
 # make code only accessible when run manually and not by source()
+#if(FALSE){
 
-if(FALSE){
   # Download data from GitHub and use base R
   
   data1 <- read.csv("./data/raw/insurance_with_date.csv")
@@ -75,7 +75,7 @@ if(FALSE){
     xlab(label = "Time") +
     ylab(label = "# of confirmed cases") +
     theme_minimal()
-  ggsave("plot_ebola_point_v1.pdf", plot = plot_ebola_point_v1, width = 8, height = 6)
+  ggsave("./output/figures/plot_ebola_point_v1.pdf", plot = plot_ebola_point_v1, width = 8, height = 6)
   
   # line plot
   plot_ebola_line_v1 <- ggplot(data = ebola_arr, 
@@ -92,10 +92,9 @@ if(FALSE){
     xlab(label = "Time") +
     ylab(label = "# of confirmed cases") +
     theme_minimal()
+  ggsave("./output/figures/plot_ebola_line_v1.pdf", plot = plot_ebola_line_v1, width = 8, height = 6)
+#}
   
-  ggsave("plot_ebola_line_v1.pdf", plot = plot_ebola_line_v1, width = 8, height = 6)
-}
-
 # bar plot
 plot_ebola_col_v1 <- ggplot(data = ebola_arr, 
                             mapping = aes(x = date, y = cum_conf_cases)) + 
@@ -112,7 +111,7 @@ plot_ebola_col_v1 <- ggplot(data = ebola_arr,
   ylab(label = "# of confirmed cases") +
   theme_minimal() +
   theme(legend.position = "bottom")
-#ggsave("plot_ebola_col_v1.pdf", plot = plot_ebola_col_v1, width = 8, height = 6) # only run once
+#ggsave("./output/figures/plot_ebola_col_v1.pdf", plot = plot_ebola_col_v1, width = 8, height = 6) # only run once
 plot_ebola_col_v1
 
 #this is a change for uploading to GitHub8 -- with comment 2.0
