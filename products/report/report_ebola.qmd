@@ -1,0 +1,89 @@
+---
+title: "Quarto report on ebola cases in 3 different countries"
+author: "Flurina Jenal"
+date: "`r date()`"
+format:
+  html:
+    toc: true
+    code-fold: show
+    df-print: paged
+    embed-resources: true
+  pdf:
+    toc: true
+editor: visual
+---
+
+This Quarto report was created in the course "Projects in R" from the Public Health Science curriculum. It shows the numbers and figures produced by the Ebola outbreak data (2014-2016) from [data.world](https://data.world/).
+
+
+
+```{r}
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(ggplot2)
+library(unibeCols)
+library(here)
+
+```
+
+## Loading Ebola data and tidy dataframe
+
+```{r}
+#| warning: false
+#| echo: false
+
+
+# Tidy dataframe ----
+ebola <- read_csv(here("data", "raw", "ebola.csv"))
+
+ebola_arr <- ebola %>% 
+  arrange(Date) %>% 
+  select(date = Date, country = Country, cum_conf_cases = Cum_conf_cases) %>% 
+  filter(date <= ymd("2015-03-31")) %>% 
+  filter(country == "Guinea" | country == "Liberia" | country == "Sierra Leone")
+
+ebola_arr
+```
+
+## Generating point plot for Ebola data
+
+@fig-ebola-point shows all confirmed Ebola cases from in 3 different countries.
+
+```{r}
+#| warning: false
+#| label: fig-ebola-point
+#| fig-cap: Confirmed Ebola cases in Liberia, Guinea and Sierra Leone
+
+# Point plot ----
+ggplot(data = ebola_arr, 
+                              mapping = aes(x = date, y = cum_conf_cases)) + 
+  geom_point(aes(color = country, fill = country), 
+             alpha = 0.7, shape = 21, size = 1.5) +
+  scale_fill_manual(name = "country",
+                    breaks = c("Guinea", "Liberia", "Sierra Leone"),
+                    values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2])) +
+  scale_colour_manual(name = "country",
+                      breaks = c("Guinea", "Liberia", "Sierra Leone"),
+                      values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2])) +
+  scale_x_date(breaks = ymd(c("2014-08-01", "2014-10-01", "2014-12-01", "2015-02-01", "2015-04-01")),
+               labels = c("Aug", "Oct", "Dec", "Feb", "Apr"),
+               limits = ymd(c("2014-08-01", "2015-04-01"))) +
+  ggtitle(label="Confirmed ebola cases before 2025-03-31 in 3 Countries") +
+  xlab(label = "Time") +
+  ylab(label = "# of confirmed cases") +
+  theme_minimal()
+```
+
+## Loading plot from other script
+
+Here I want to load the @fig-ebola-line from another script.
+```{r}
+#| label: fig-ebola-line
+#| echo: false
+
+#source(here("R", "00_dataWrangling.R"))
+```
+
+sessionInfo()
