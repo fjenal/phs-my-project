@@ -81,9 +81,11 @@ ggplot(data = ebola_arr,
 Here I want to load the @fig-ebola-line from another script.
 ```{r}
 #| label: fig-ebola-line
+#| fig-cap: Confirmed Ebola cases in Liberia, Guinea and Sierra Leone
 #| echo: false
 
 knitr::include_graphics(here("output", "figures", "plot_ebola_point_v1.pdf"))
+
 ```
 
 ```{r}
