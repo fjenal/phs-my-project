@@ -120,5 +120,7 @@ plot_ebola_col_v1
 library(usethis)
 library(gitcreds)
 
-usethis::create_github_token()
-gitcreds::gitcreds_set()
+#usethis::create_github_token()   # only do this step once
+#gitcreds::gitcreds_set()         # only do this step once
+
+usethis::use_git()
