@@ -1,13 +1,17 @@
-# Download data from GitHub and use tidyverse 
+# Download data from GitHub and use tidyverse
 #install.packages("here")
 library(tidyverse)
 library(here)
 library(labelled)
+library(ggplot2)
+library(unibeCols)
+library(RColorBrewer)
+
 
 # make code only accessible when run manually and not by source()
 #if(FALSE){
 
-  # Download data from GitHub and use base R
+  # Download data from GitHub and use base R ----
   
   data1 <- read.csv("./data/raw/insurance_with_date.csv")
   #data1_a <- read.csv(here("data", "raw", "insurance_with_date.csv"))
@@ -39,10 +43,8 @@ library(labelled)
   # )
   
   
-  # Data visualization and plots
-  library(ggplot2)
-  install.packages("unibeCols", repos = c("https://dcr-unibe-ch.r-universe.dev", "https://cloud.r-project.org"))
-  library(unibeCols)
+  # Data visualization and plots ----
+  # install.packages("unibeCols", repos = c("https://dcr-unibe-ch.r-universe.dev", "https://cloud.r-project.org"))
   
   ebola <- read_csv("./data/raw/ebola.csv")
   str(ebola)
@@ -115,3 +117,153 @@ plot_ebola_col_v1 <- ggplot(data = ebola_arr,
 plot_ebola_col_v1
 
 #this is a change for uploading to GitHub8 -- with comment 2.0
+
+
+# --- --- --- --- --- --- ---
+
+# Inspect data for final assessment ----
+
+covid_region <- read_csv("./data/raw/COVID19Cases_geoRegion.csv")
+covid_region_age <- read_csv("./data/raw/COVID19Cases_geoRegion_AKL10_w.csv")
+str(covid_region_age)
+unique(covid_region_age$geoRegion)
+unique(covid_region_age$altersklasse_covid19)
+unique(covid_region_age$type_variant)
+
+
+## Swiss covid entries from 2020-2023 ----
+covid_ch <- covid_region_age %>% 
+  select(ageClass = altersklasse_covid19, geoRegion, entries, year = datum_dboardformated, pop) %>% 
+  filter(geoRegion == "CH") %>% 
+  filter(ageClass != "Unbekannt") %>% 
+  mutate(week = as.numeric(substr(year, 6, 7))) %>% 
+  filter(week != 53) %>% 
+  mutate(year = as.factor(substr(year, 1, 4))) %>% 
+  mutate(popPrct = (as.numeric((100/pop)*entries))) %>% 
+  mutate(across(c(geoRegion, ageClass), factor)) %>% 
+  arrange(year, week, ageClass)
+
+levels(covid_ch$geoRegion)
+levels(covid_ch$ageClass)
+levels(covid_ch$year)
+unique(covid_ch$week)
+str(covid_ch)
+
+## Table for Swiss covid entries from 2020-2023 ----
+library(gtsummary)
+covid_ch |> 
+  select(year, entries) |> 
+  tbl_summary(by = year) |> 
+  add_overall()
+
+## When were the most covid cases ----
+
+covid_weekly <- covid_ch %>%
+  group_by(year, week) %>%
+  summarise(entries = sum(entries), .groups = "drop")
+
+ggplot(covid_weekly, aes(x = week, y = entries)) +
+  geom_col(mapping = aes(fill = year, colour = year), 
+           alpha = 0.6, linetype = "solid", linewidth = 0.5, width = 0.7, show.legend = FALSE) +
+  scale_fill_manual(name = "year",
+                    breaks = c("2020", "2021", "2022", "2023"),
+                    labels = c("2020", "2021", "2022", "2023"),
+                    values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2], unibePastelS()[2])) +
+  scale_colour_manual(name = "year",
+                      breaks = c("2020", "2021", "2022", "2023"),
+                      labels = c("2020", "2021", "2022", "2023"),
+                      values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2], unibePastelS()[2])) +
+  scale_x_continuous(
+    breaks = seq(0, 52, by = 4),        # major ticks: 1, 9, 17, ...
+    minor_breaks = seq(0, 52, by = 2),  # minor grid: every 4 weeks
+    limits = c(0, 52)) +
+  scale_y_continuous(breaks = seq(from = 0, to = 260000, by = 50000),
+                     limits = c(0, 260000)) +
+  ggtitle(label="COVID entries in Switzerland (2020-2023)") +
+  xlab(label = "Week number") +
+  ylab(label = "# COVID entries") +
+  labs(colour = "Year", fill = "Year") +
+  theme_bw() +
+  #theme(legend.position = "bottom") +
+  facet_wrap(.~year)
+
+### Compare covid cases in 2022 across different age groups ----
+
+covid_2022 <- covid_ch %>% 
+  filter(year == "2022")
+str(covid_2022)
+
+  # generate good color palette
+  my_palette <- brewer.pal(11, "PiYG")[c(1, 2, 3, 4, 5, 7, 8, 9, 10)]
+
+ggplot(covid_2022, aes(x = week, y = entries)) + 
+  geom_line(mapping = aes(colour = ageClass), linetype = "solid", linewidth = 1.0) + 
+  #scale_color_viridis_d(direction = -1) +
+  #scale_color_brewer(palette = "YlGnBu") +
+  geom_point(mapping = aes(fill = ageClass, color = ageClass), shape = 21, size = 1.9) +
+  scale_fill_viridis_d(direction = -1) +
+  scale_color_viridis_d(direction = -1) +
+  scale_x_continuous(
+    breaks = seq(0, 52, by = 4),        # major ticks: 1, 9, 17, ...
+    minor_breaks = seq(0, 52, by = 2),  # minor grid: every 4 weeks
+    limits = c(1, 52)) +
+  scale_y_continuous(breaks = seq(from = 0, to = 50000, by = 5000),
+                     limits = c(0, 50000)) +
+  ggtitle(label="Covid entries across age groups in Switzerland (2022)") +
+  xlab(label = "Week number") +
+  ylab(label = "# covid entries") +
+  labs(color = "Age group", fill = "Age group") +
+  theme_bw() +
+  theme(legend.position = "right")
+
+
+
+# --- --- --- --- --- --- ---
+
+# Data wrangling for final assessment ----
+# Select data: geoRegion == "GE", "ZH", "LU" & AGE
+covid_arr <- covid_region_age %>% 
+  select(ageClass = altersklasse_covid19, geoRegion, entries, year = datum_dboardformated, pop) %>% 
+  filter(geoRegion == "ZH" | geoRegion == "LU" | geoRegion == "GE") %>% 
+  filter(ageClass != "Unbekannt") %>% 
+  mutate(week = as.numeric(substr(year, 6, 7))) %>% 
+  mutate(year = as.factor(substr(year, 1, 4))) %>% 
+  mutate(popPrct = (as.numeric((100/pop)*entries))) %>% 
+  mutate(across(c(geoRegion, ageClass), factor)) %>% 
+  arrange(geoRegion, ageClass, year)
+  
+levels(covid_arr$geoRegion)
+levels(covid_arr$ageClass)
+str(covid_arr)
+
+covid_2021 <- covid_arr %>% 
+  filter(year == "2021" & geoRegion == "ZH")
+
+
+## bar plot (facet) -- number of entries ----
+covid_bar_plot <- ggplot(data = covid_arr, 
+          mapping = aes(x = ageClass, y = entries)) + 
+  geom_col(mapping = aes(fill = geoRegion, colour = geoRegion), 
+           linetype = "solid", linewidth = 0.5, width = 0.7) +
+  scale_fill_manual(name = "geoRegion",
+                    breaks = c("GE", "LU", "ZH"),
+                    labels = c("Geneva", "Lucerne", "Zurich"),
+                    values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2])) +
+  scale_colour_manual(name = "geoRegion",
+                      breaks = c("GE", "LU", "ZH"),
+                      labels = c("Geneva", "Lucerne", "Zurich"),
+                      values = c(unibeGreenS()[2], unibeIceS()[2], unibeMustardS()[2])) +
+  ggtitle(label="Covid entries in 3 different cantons in Switzerland") +
+  xlab(label = "age classes") +
+  ylab(label = "# covid entries") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+  #facet_wrap(.~year)
+covid_bar_plot
+
+
+library(quantreg)
+ggplot(covid_arr, aes(x = year, y = popPrct, color = geoRegion)) +
+  geom_point()
+#  geom_quantile()
+
